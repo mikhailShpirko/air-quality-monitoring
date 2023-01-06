@@ -6,7 +6,7 @@ Main goal of this project was to be able to track air quality and review histori
 - Create clean architecture
 - Have a tidy solution structure
 - Cover the most critical logic with UT and use Fluent Assertions
-- Try out Python to work with SDS011 Sensor
+- Try out Python to communicate with SDS011 Sensor
 
 ## How it works
 - Communication with the sensor is done via Web API powered by Python and Flusk. There is a single endpoint that queries measurement at current time from the sensor.
