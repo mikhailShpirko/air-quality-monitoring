@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Air Quality Monitoring</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-5 text-right">
+                <label for="fromTimeStamp" class="form-label">From:</label>
+                <input type="text" class="form-control" id="fromTimeStamp" placeholder="yyyy-mm-dd hh:mm" onchange="refreshGraph()" />
+            </div>
+            <div class="col-2">
+            </div>
+            <div class="col-5">
+                <label for="toTimeStamp" class="form-label">To:</label>
+                <input type="text" class="form-control" id="toTimeStamp" placeholder="yyyy-mm-dd hh:mm" onchange="refreshGraph()" />
+            </div>
+        </div>
+        <div class="row p-3"></div>
+        <div class="row">
+            <div class="col-12">
+                <canvas id="measurementsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/chart.min.js"></script>
+    <script type="text/javascript" src="js/env.js"></script>
+    <script type="text/javascript">
+        let measurementChart = false;
+
+        function formatDate(date) {
+            return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        function refreshGraph() {
+            let fromTimestampFormatted = $("#fromTimeStamp").val();
+            let toTimestampFormatted = $("#toTimeStamp").val();
+
+            $.getJSON(environment.getRequestUrl(fromTimestampFormatted, toTimestampFormatted), function (data) {
+                let labels = [];
+                let pm10Measurements = [];
+                let pm2_5Measurements = [];
+                $.each(data, function (index, measurement) {
+                    labels.push(new Date(measurement.timestamp).toLocaleString());
+                    pm10Measurements.push(measurement.pm10);
+                    pm2_5Measurements.push(measurement.pm2_5);
+                });
+                let chartContext = document.getElementById('measurementsChart').getContext('2d');
+                if (measurementChart)
+                {
+                    measurementChart.destroy();
+                }
+                measurementChart = new Chart(chartContext, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                'label': 'PM 10',
+                                'data': pm10Measurements,
+                                'backgroundColor': '#cc0000',
+                                'borderColor': '#cc0000',
+                                'borderWidth': 3,
+                            },
+                            {
+                                'label': 'PM 2.5',
+                                'data': pm2_5Measurements,
+                                'backgroundColor': '#42C0FB',
+                                'borderColor': '#42C0FB',
+                                'borderWidth': 3,
+                            }
+                        ]
+                    }
+                });
+            });
+        }
+
+        let currentTimestamp = new Date();
+        let fromTimestamp = new Date(currentTimestamp);
+        fromTimestamp.setDate(fromTimestamp.getDate() - 7);
+        fromTimestamp.setHours(0);
+        fromTimestamp.setMinutes(0);
+
+        let toTimestamp = new Date(currentTimestamp);       
+        toTimestamp.setDate(toTimestamp.getDate() + 1);
+        toTimestamp.setHours(0);
+        toTimestamp.setMinutes(0);
+
+        let fromTimestampFormatted = formatDate(fromTimestamp);
+        let toTimestampFormatted = formatDate(toTimestamp);
+
+        $("#fromTimeStamp").val(fromTimestampFormatted);
+        $("#toTimeStamp").val(toTimestampFormatted);
+        
+        refreshGraph();
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+version: '3'
+services:
+  sensor_api:
+    restart: always
+    image: sds_api:v1
+    build:
+      context: ../
+      dockerfile: docker/SDS.API.Dockerfile
+    container_name: sds_api
+    environment:
+        - PORT=5555
+        - SERVER_HOST=0.0.0.0
+    devices:
+        - "/dev/ttyUSB0:/dev/ttyUSB0"
+    ports: 
+        - '8000:5555'
+      
+  measurement_api:
+    restart: always
+    image: measurement_api:v1
+    build:
+      context: ../
+      dockerfile: docker/Measurement.API.Dockerfile
+    container_name: measurement_api
+    ports: 
+        - '9898:80'
+    environment:
+        - DbConnectionString=Server=db;Port=5432;Database=air_quality_monitoring;Username=postgres;Password=admin!@#69874
+    depends_on:
+        - db
+        
+  measurement_webui:
+    restart: always
+    image: measurement_webui:v1
+    build:
+      context: ../
+      dockerfile: docker/Measurement.WebUI.Dockerfile
+    container_name: measurement_webui
+    ports: 
+        - '9899:80'
+    environment:
+        - API_PORT=9898
+        - API_URI=api/measurement
+    depends_on:
+        - measurement_api
+
+  monitoring_service:
+    restart: always
+    image: monitoring_service:v1
+    build:
+      context: ../
+      dockerfile: docker/Monitoring.Service.Dockerfile
+    container_name: monitoring_service
+    environment:
+        - SensorApiBaseAddress=http://sensor_api:5555/
+        - MeasurementApiBaseAddress=http://measurement_api:80/
+        - CollectMeasurementsIntervalSeconds=60
+    depends_on:
+        - sensor_api
+        - measurement_api
+        
+  db:
+    restart: always
+    image: measurement_db:v1
+    build:
+      context: ../
+      dockerfile: docker/Db.Dockerfile
+    container_name: measurement_db
+    environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=admin!@#69874
+        - POSTGRES_DB=air_quality_monitoring
+    ports:
+        - "5433:5432"
+    volumes:
+        - pg-data:/var/lib/postgresql/data
+        
+volumes:
+  pg-data:
