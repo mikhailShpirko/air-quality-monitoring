@@ -25,7 +25,7 @@ namespace Measurement.Infrastructure
             var measurements = await GetMeasurementsForPeriodAsync(from, to, cancellationToken);
 
             return measurements
-                .Select(m => new Domain.Measurement(m.PM2_5, m.PM10, new DateTime(m.TimestampTicks)));
+                .Select(m => new Domain.Measurement(m.PM2_5, m.PM10, new DateTime(m.TimestampTicks, DateTimeKind.Local)));
         }
 
         public async Task SaveAsync(Domain.Measurement measurement, CancellationToken cancellationToken)
