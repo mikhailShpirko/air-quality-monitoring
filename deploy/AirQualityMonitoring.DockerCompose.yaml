@@ -54,7 +54,7 @@ services:
     environment:
         - SensorApiBaseAddress=http://sensor_api:5555/
         - MeasurementApiBaseAddress=http://measurement_api:80/
-        - CollectMeasurementsIntervalSeconds=60
+        - CollectMeasurementsIntervalSeconds=600
     depends_on:
         - sensor_api
         - measurement_api
